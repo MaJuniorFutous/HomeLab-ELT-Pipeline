@@ -1,0 +1,12 @@
+dbt_project:
+  outputs:
+    dev:
+      dbname: firefly
+      host: dest_postgres
+      pass: "{{ env_var('DEST_FF_USER_PASSWORD') }}"
+      port: 5432
+      schema: main
+      threads: 2
+      type: postgres
+      user: firefly_user
+  target: dev

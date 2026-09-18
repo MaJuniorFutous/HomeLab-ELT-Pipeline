@@ -1,0 +1,10 @@
+.venv
+.env
+logs
+.log
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+dest-postgres/
+docker-entrypoint-initdb.d/

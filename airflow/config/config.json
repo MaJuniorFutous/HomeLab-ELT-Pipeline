@@ -1,0 +1,10 @@
+{
+  "firefly_config":
+    {
+      "timestamp_cols": {
+        "updated": "updated_at",
+        "deleted": "deleted_at",
+        "created": "created_at"
+      }
+    }
+}

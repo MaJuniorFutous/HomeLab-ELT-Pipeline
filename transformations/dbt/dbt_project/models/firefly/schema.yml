@@ -1,0 +1,413 @@
+version: 2
+
+sources:
+  - name: firefly_db
+    schema: main
+    description: "Data from Firefly III service on rpi5."
+    tables:
+      - name: tags
+        +enabled: true
+        description: "Firefly tags table."
+        meta:
+          is_junction: false
+        columns:
+          - name: id
+            description: "Primary key for the tag record."
+            data_tests:
+              - unique
+              - not_null
+
+          - name: created_at
+            description: "Timestamp when the tag was created."
+
+          - name: updated_at
+            description: "Timestamp when the tag was last updated."
+
+          - name: deleted_at
+            description: "Soft delete timestamp; set when the tag is deleted."
+
+          - name: user_id
+            description: "Foreign key referencing the user who owns the tag."
+            data_tests:
+              - not_null
+
+          - name: user_group_id
+            description: "Optional reference to a user group this tag belongs to."
+
+          - name: tag
+            description: "The tag name or label applied to transactions."
+            data_tests:
+              - not_null
+
+          - name: tag_mode
+            description: "Defines how the tag behaves (e.g., metadata tag vs. transaction tag)."
+            data_tests:
+              - not_null
+
+          - name: date
+            description: "Optional date associated with the tag (e.g., event or period marker)."
+
+          - name: date_tz
+            description: "Timezone associated with the tag's date."
+
+          - name: description
+            description: "Optional free-text description providing more context about the tag."
+
+          - name: latitude
+            description: "Optional latitude coordinate associated with the tag."
+
+          - name: longitude
+            description: "Optional longitude coordinate associated with the tag."
+
+          - name: zoomLevel
+            description: "Optional map zoom level for the associated geolocation."
+
+
+      - name: transactions
+        +enabled: true
+        description: "Firefly transactions table containing the main information on each transaction."
+        meta:
+          is_junction: false
+        columns:
+          - name: id
+            description: "Primary key for the transaction record."
+            data_tests:
+              - unique
+              - not_null
+
+          - name: created_at
+            description: "Timestamp when the transaction was created."
+
+          - name: updated_at
+            description: "Timestamp when the transaction was last updated."
+
+          - name: deleted_at
+            description: "Soft delete timestamp; set when the transaction is deleted."
+
+          - name: reconciled
+            description: "Indicates whether the transaction has been reconciled (0 = no, 1 = yes)."
+            data_tests:
+              - not_null
+              - accepted_values:
+                  values: [0, 1]
+
+          - name: account_id
+            description: "Foreign key referencing the account affected by this transaction."
+            data_tests:
+              - not_null
+
+          - name: transaction_journal_id
+            description: "Foreign key linking to the parent transaction journal (groups related transaction splits)."
+            data_tests:
+              - not_null
+
+          - name: description
+            description: "Optional description or memo for the transaction."
+
+          - name: transaction_currency_id
+            description: "Foreign key referencing the currency used for the transaction amount."
+
+          - name: amount
+            description: "Transaction amount in the transaction currency."
+            data_tests:
+              - not_null
+
+          - name: balance_before
+            description: "Account balance before this transaction was applied."
+
+          - name: balance_after
+            description: "Account balance after this transaction was applied."
+
+          - name: balance_dirty
+            description: "Flag indicating whether the stored balance is potentially outdated and needs recalculation (0 = clean, 1 = dirty)."
+            data_tests:
+              - not_null
+              - accepted_values:
+                  values: [0, 1]
+
+          - name: foreign_amount
+            description: "Amount in a foreign currency, if applicable."
+
+          - name: foreign_currency_id
+            description: "Foreign key referencing the foreign currency used."
+
+          - name: identifier
+            description: "Internal identifier distinguishing transaction roles within a journal (e.g., source/destination)."
+            data_tests:
+              - not_null
+
+          - name: native_amount
+            description: "Amount converted to the user's native currency."
+
+          - name: native_foreign_amount
+            description: "Foreign amount converted to the user's native currency."
+
+
+      - name: tag_transaction_journal
+        +enabled: true
+        description: "Junction table to compare tags and the transaction journal."
+        meta:
+          is_junction: true
+        columns:
+          - name: id
+            description: "Primary key for the tag-to-transaction mapping record."
+            data_tests:
+              - unique
+              - not_null
+          #* For info on relationship tests, see https://docs.getdbt.com/docs/build/data-tests?version=1.12
+          - name: tag_id
+            description: "Foreign key referencing the associated tag."
+            data_tests:
+              - not_null
+              - relationships:
+                  to: source('firefly_db', 'tags')
+                  field: id
+
+          - name: transaction_journal_id
+            description: "Foreign key referencing the associated transaction journal entry."
+            data_tests:
+              - not_null
+              - relationships:
+                  to: source('firefly_db', 'transaction_journals')
+                  field: id
+
+
+      - name: transaction_journals
+        +enabled: true
+        description: "Contains details about a transaction besides the core fields found in the transactions table."
+        meta:
+          is_junction: false
+        columns:
+          - name: id
+            description: "Primary key for the transaction journal entry."
+            data_tests:
+              - unique
+              - not_null
+
+          - name: created_at
+            description: "Timestamp when the transaction journal entry was created."
+
+          - name: updated_at
+            description: "Timestamp when the transaction journal entry was last updated."
+
+          - name: deleted_at
+            description: "Soft delete timestamp; set when the entry is deleted."
+
+          - name: user_id
+            description: "Foreign key referencing the user who owns the transaction."
+            data_tests:
+              - not_null
+
+          - name: user_group_id
+            description: "Optional reference to a user group associated with the transaction."
+
+          - name: transaction_type_id
+            description: "Foreign key indicating the type of transaction (e.g., withdrawal, deposit, transfer)."
+            data_tests:
+              - not_null
+
+          - name: transaction_group_id
+            description: "Optional grouping identifier linking related transactions together."
+
+          - name: bill_id
+            description: "Optional reference to a bill associated with this transaction."
+
+          - name: transaction_currency_id
+            description: "Reference to the currency used for the transaction."
+
+          - name: description
+            description: "User-defined description of the transaction."
+            data_tests:
+              - not_null
+
+          - name: date
+            description: "Primary timestamp of when the transaction occurred."
+            data_tests:
+              - not_null
+
+          - name: date_tz
+            description: "Timezone associated with the transaction date."
+
+          - name: interest_date
+            description: "Optional date when interest is applied."
+
+          - name: book_date
+            description: "Optional accounting/bookkeeping date for the transaction."
+
+          - name: process_date
+            description: "Optional processing date when the transaction was finalized."
+
+          - name: order
+            description: "Ordering index for transactions occurring at the same time."
+            data_tests:
+              - not_null
+
+          - name: tag_count
+            description: "Number of tags associated with this transaction."
+            data_tests:
+              - not_null
+
+          - name: encrypted
+            description: "Flag indicating whether the transaction data is encrypted (0 = no, 1 = yes)."
+            data_tests:
+              - not_null
+              - accepted_values:
+                  values: [0, 1]
+
+          - name: completed
+            description: "Flag indicating whether the transaction is completed (0 = no, 1 = yes)."
+            data_tests:
+              - not_null
+              - accepted_values:
+                  values: [0, 1]
+
+
+      - name: category_transaction_journal
+        +enabled: true
+        description: "Junction table for the category and transaction journal tables."
+        meta:
+          is_junction: true
+        columns:
+          - name: id
+            description: "Primary key for the category-to-transaction mapping record."
+            data_tests:
+              - unique
+              - not_null
+
+          - name: category_id
+            description: "Foreign key referencing the associated category."
+            data_tests:
+              - not_null
+              - relationships:
+                  to: source('firefly_db', 'categories')
+                  field: id
+
+          - name: transaction_journal_id
+            description: "Foreign key referencing the associated transaction journal entry."
+            data_tests:
+              - not_null
+              - relationships:
+                  to: source('firefly_db', 'transaction_journals')
+                  field: id
+
+
+      - name: categories
+        +enabled: true
+        description: "Firefly categories table."
+        meta:
+          is_junction: false
+        columns:
+          - name: id
+            description: "Primary key for the category record."
+            data_tests:
+              - unique
+              - not_null
+
+          - name: created_at
+            description: "Timestamp when the category was created."
+
+          - name: updated_at
+            description: "Timestamp when the category was last updated."
+
+          - name: deleted_at
+            description: "Soft delete timestamp; set when the category is deleted."
+
+          - name: user_id
+            description: "Foreign key referencing the user who owns the category."
+            data_tests:
+              - not_null
+
+          - name: user_group_id
+            description: "Optional reference to a user group this category belongs to."
+
+          - name: name
+            description: "The category name used to classify transactions."
+            data_tests:
+              - not_null
+
+          - name: encrypted
+            description: "Indicates whether the category name or associated data is encrypted."
+            data_tests:
+              - not_null
+
+
+      - name: accounts
+        +enabled: true
+        description: "Information about accounts."
+        meta:
+          is_junction: false
+        columns:
+          - name: id
+            description: "Primary key for the account."
+            data_tests:
+              - unique
+              - not_null
+
+          - name: created_at
+            description: "Timestamp when the account was created."
+
+          - name: updated_at
+            description: "Timestamp when the account was last updated."
+
+          - name: deleted_at
+            description: "Soft delete timestamp; set when the account is deleted."
+
+          - name: user_id
+            description: "Foreign key referencing the user who owns the account."
+            data_tests:
+              - not_null
+
+          - name: user_group_id
+            description: "Optional reference to a user group associated with the account."
+
+          - name: account_type_id
+            description: "Foreign key referencing the type of account (e.g., asset, expense, liability)."
+            data_tests:
+              - not_null
+              - relationships:
+                  to: source('firefly_db', 'account_types')
+                  field: id
+
+          - name: name
+            description: "Name of the account as defined by the user."
+            data_tests:
+              - not_null
+
+          - name: virtual_balance
+            description: "Optional user-defined balance that overrides or supplements calculated balances."
+
+          - name: iban
+            description: "International Bank Account Number associated with the account, if applicable."
+
+          - name: active
+            description: "Flag indicating whether the account is active (1) or inactive (0)."
+            data_tests:
+              - not_null
+              - accepted_values:
+                  values: [0, 1]
+
+          - name: encrypted
+            description: "Flag indicating whether sensitive account data is encrypted (1) or not (0)."
+            data_tests:
+              - not_null
+              - accepted_values:
+                  values: [0, 1]
+
+          - name: order
+            description: "Ordering index used to sort accounts in the UI."
+            data_tests:
+              - not_null
+
+          - name: native_virtual_balance
+            description: "Virtual balance in the account's native currency, if different from the default."
+
+
+models:
+  - name: avg_starbucks
+    schema: main
+    description: "The monthly average Starbucks expense for all available months."
+    columns:
+      - name: avg_sum
+        description: "The monthly average Starbucks expense for all available months."
+        data_tests:
+          - not_null

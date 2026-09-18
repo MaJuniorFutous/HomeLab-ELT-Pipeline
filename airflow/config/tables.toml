@@ -1,0 +1,144 @@
+[[tables]]
+name = "tags"
+is_main = true
+af_watermark = "wm_tags_ts"
+wh_name = 'tags'
+columns = [
+    'id', 
+    'created_at', 
+    'updated_at', 
+    'deleted_at', 
+    'user_id', 
+    'user_group_id', 
+    'tag', 
+    'tag_mode', 
+    'date', 
+    'date_tz', 
+    'description', 
+    'latitude', 
+    'longitude', 
+    'zoomLevel'
+]
+
+[[tables]]
+name = "transactions"  # bools
+is_main = true
+af_watermark = "wm_transactions_ts"
+wh_name = 'transactions'
+columns = [
+    'id',
+    'created_at',
+    'updated_at',
+    'deleted_at',
+    'reconciled',
+    'account_id',
+    'transaction_journal_id',
+    'description',
+    'transaction_currency_id',
+    'amount',
+    'balance_before',
+    'balance_after',
+    'balance_dirty',
+    'foreign_amount',
+    'foreign_currency_id',
+    'identifier',
+    'native_amount',
+    'native_foreign_amount'
+]
+
+[[tables]]
+name = "tag_transaction_journal"
+is_main = false
+wh_name = 'tag_transaction_journal'
+columns = [
+    'id',
+    'tag_id',
+    'transaction_journal_id'
+]
+
+[[tables]]
+name = "transaction_journals" # bools
+is_main = true
+af_watermark = "wm_transaction_journals_ts"
+wh_name = 'transaction_journals'
+columns = [
+    'id',
+    'created_at',
+    'updated_at',
+    'deleted_at',
+    'user_id',
+    'user_group_id',
+    'transaction_type_id',
+    'transaction_group_id',
+    'bill_id',
+    'transaction_currency_id',
+    'description',
+    'date',
+    'date_tz',
+    'interest_date',
+    'book_date',
+    'process_date',
+    'order',
+    'tag_count',
+    'encrypted',
+    'completed'
+]
+
+[[tables]]
+name = "category_transaction_journal"
+is_main = false
+wh_name = 'category_transaction_journal'
+columns = [
+    'id',
+    'category_id',
+    'transaction_journal_id'
+]
+
+[[tables]]
+name = "accounts"  # bools
+is_main = true
+af_watermark = "wm_accounts_ts"
+wh_name = 'accounts'
+columns = [
+    'id',
+    'created_at',
+    'updated_at',
+    'deleted_at',
+    'user_id',
+    'user_group_id',
+    'account_type_id',
+    'name',
+    'virtual_balance',
+    'iban',
+    'active',
+    'encrypted',
+    'order',
+    'native_virtual_balance'
+]
+
+[[tables]]
+name = "categories"  # bools
+is_main = true
+af_watermark = "wm_categories_ts"
+wh_name = 'categories'
+columns = [
+    'id',
+    'created_at',
+    'updated_at',
+    'deleted_at',
+    'user_id',
+    'user_group_id',
+    'name',
+    'encrypted'
+]
+
+[[tables]]
+name = "category_transaction_journal"  # bools
+is_main = false
+af_watermark = "wm_category_transaction_journal_ts"
+wh_name = 'category_transaction_journal'
+columns = [
+    'id',
+    'category_id',
+    'transaction_journal_id'
+]
